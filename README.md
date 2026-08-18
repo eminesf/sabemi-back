@@ -4,6 +4,12 @@ Teste técnico: serviço que recebe notificações (webhooks) de pagamento de um
 parceiro, garante idempotência, processa em background e expõe os dados para um
 painel (frontend em repositório separado).
 
+## Produção
+
+- **API:** https://sabemi-back-production.up.railway.app
+- **Swagger:** https://sabemi-back-production.up.railway.app/swagger
+- **Dashboard (frontend):** https://sabemi-front.vercel.app
+
 ## Arquitetura
 
 ```
