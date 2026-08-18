@@ -25,11 +25,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger habilitado também em produção (decisão proposital deste teste,
+// para facilitar a avaliação do backend sem precisar rodar localmente).
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // garante que as tabelas existam ao subir (EnsureCreated é suficiente para o
 // escopo deste teste; em um projeto maior isso seria feito via EF migrations
