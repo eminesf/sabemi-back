@@ -1,0 +1,7 @@
+bin/
+obj/
+*.user
+.vs/
+
+# contém a connection string do Postgres em texto puro (senha real)
+src/Sabemi.Webhooks.Api/Properties/launchSettings.json
