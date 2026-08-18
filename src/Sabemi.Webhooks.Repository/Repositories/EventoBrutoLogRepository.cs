@@ -56,7 +56,7 @@ public class EventoBrutoLogRepository(SabemiDbContext dbContext) : IEventoBrutoL
         var query = dbContext.EventosBrutos.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(idContrato))
-            query = query.Where(e => e.IdContrato == idContrato);
+            query = query.Where(e => EF.Functions.ILike(e.IdContrato!, $"%{idContrato}%"));
 
         query = status?.Trim().ToLowerInvariant() switch
         {
