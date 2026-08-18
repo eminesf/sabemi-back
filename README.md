@@ -43,6 +43,12 @@ Implementado: **ApiKey simples**, no header `X-Api-Key`.
 Ver `src/Sabemi.Webhooks.Service/Services/ApiKeyValidator.cs` e o uso em
 `src/Sabemi.Webhooks.Api/Controllers/WebhooksController.cs`.
 
+**Chave de desenvolvimento** (`src/Sabemi.Webhooks.Api/appsettings.Development.json`,
+seção `Webhook:ApiKey`): `chave-transação`. É o valor que vai no header
+`X-Api-Key` pra testar localmente (Swagger, `.http`, script, ou a rota oculta
+de teste do frontend). Em produção, configure `Webhook__ApiKey` com uma chave
+própria — ver seção "Deploy no Railway".
+
 ## Idempotência
 
 `log_eventos_brutos.id_transacao` tem **índice único** no banco. O fluxo:

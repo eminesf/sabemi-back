@@ -7,7 +7,7 @@ Accept: application/json
 
 POST {{Sabemi.Webhooks.Api_HostAddress}}/webhooks/pagamento
 Content-Type: application/json
-X-Api-Key: chave-dev-local-troque-em-producao
+X-Api-Key: chave-transação
 
 {
   "id_transacao": "TX-teste-001",
