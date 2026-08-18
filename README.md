@@ -10,6 +10,13 @@ painel (frontend em repositório separado).
 - **Swagger:** https://sabemi-back-production.up.railway.app/swagger
 - **Dashboard (frontend):** https://sabemi-front.vercel.app
 
+O Swagger foi **deixado disponível em produção de propósito** (`Program.cs`
+não restringe `UseSwagger`/`UseSwaggerUI` a `Development`) — decisão
+específica deste teste técnico, pra facilitar a avaliação do backend direto
+pelo link acima, sem precisar clonar/rodar nada localmente. Em um projeto
+real isso ficaria restrito a `Development` (ou atrás de autenticação), já
+que expõe publicamente a estrutura de todos os endpoints.
+
 ## Arquitetura
 
 ```
