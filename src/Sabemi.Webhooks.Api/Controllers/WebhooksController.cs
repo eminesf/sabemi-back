@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace Sabemi.Webhooks.Api.Controllers;
 [ApiController]
 [Route("webhooks")]
 public class WebhooksController(
-    ISignatureValidator signatureValidator,
+    IApiKeyValidator apiKeyValidator,
     IWebhookPagamentoService webhookPagamentoService,
     ILogger<WebhooksController> logger) : ControllerBase
 {
@@ -25,13 +26,17 @@ public class WebhooksController(
     {
         var rawBody = await LerRawBodyAsync(ct);
 
-        Request.Headers.TryGetValue("X-Signature", out var signatureHeader);
+        Request.Headers.TryGetValue("X-Api-Key", out var apiKeyHeader);
 
-        if (!signatureValidator.IsValid(rawBody, signatureHeader))
+        if (!apiKeyValidator.IsValid(apiKeyHeader))
         {
-            logger.LogWarning("Webhook rejeitado: assinatura ausente ou inválida.");
-            await webhookPagamentoService.RegistrarFalhaValidacaoAsync(rawBody, "Assinatura ausente ou inválida (header X-Signature).", ct);
-            return Unauthorized(new { erro = "Assinatura inválida." });
+            var motivo = string.IsNullOrWhiteSpace(apiKeyHeader)
+                ? "Header X-Api-Key ausente."
+                : "API Key inválida.";
+
+            logger.LogWarning("Webhook rejeitado: {Motivo}", motivo);
+            await webhookPagamentoService.RegistrarFalhaValidacaoAsync(rawBody, motivo, ct);
+            return Unauthorized(new { erro = motivo });
         }
 
         WebhookPagamentoRequest? payload;
@@ -45,10 +50,23 @@ public class WebhooksController(
             return BadRequest(new { erro = "JSON inválido." });
         }
 
-        if (payload is null || string.IsNullOrWhiteSpace(payload.IdTransacao))
+        if (payload is null)
         {
-            await webhookPagamentoService.RegistrarFalhaValidacaoAsync(rawBody, "Campo id_transacao é obrigatório.", ct);
-            return BadRequest(new { erro = "id_transacao é obrigatório." });
+            await webhookPagamentoService.RegistrarFalhaValidacaoAsync(rawBody, "Corpo da requisição vazio.", ct);
+            return BadRequest(new { erro = "Corpo da requisição vazio." });
+        }
+
+        var errosValidacao = new List<ValidationResult>();
+        if (!Validator.TryValidateObject(payload, new ValidationContext(payload), errosValidacao, validateAllProperties: true))
+        {
+            var detalhes = errosValidacao
+                .Select(e => new { campo = string.Join(", ", e.MemberNames), mensagem = e.ErrorMessage })
+                .ToList();
+
+            var motivo = string.Join(" | ", detalhes.Select(d => $"{d.campo}: {d.mensagem}"));
+            logger.LogWarning("Webhook rejeitado: dados inválidos ({Motivo})", motivo);
+            await webhookPagamentoService.RegistrarFalhaValidacaoAsync(rawBody, motivo, ct, payload);
+            return BadRequest(new { erro = "Dados inválidos.", detalhes });
         }
 
         var resultado = await webhookPagamentoService.ReceberAsync(payload, rawBody, ct);

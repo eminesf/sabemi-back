@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Sabemi.Webhooks.Api.Swagger;
 using Sabemi.Webhooks.Service.DependencyInjection;
 using Sabemi.Webhooks.Repository.DependencyInjection;
 using Sabemi.Webhooks.Repository.Persistence;
@@ -7,7 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.OperationFilter<WebhookPagamentoOperationFilter>();
+});
 
 builder.Services.AddServiceLayer(builder.Configuration);
 builder.Services.AddRepositoryLayer(builder.Configuration);

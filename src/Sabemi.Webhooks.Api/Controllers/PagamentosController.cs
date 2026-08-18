@@ -47,4 +47,17 @@ public class PagamentosController(IEventoBrutoLogRepository eventoRepository) : 
 
         return Ok(dto);
     }
+
+    /// <summary>
+    /// Exclui um evento de pagamento pelo Id.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Excluir(Guid id, CancellationToken ct)
+    {
+        var excluido = await eventoRepository.ExcluirAsync(id, ct);
+        if (!excluido)
+            return NotFound(new { erro = "Evento não encontrado." });
+
+        return NoContent();
+    }
 }

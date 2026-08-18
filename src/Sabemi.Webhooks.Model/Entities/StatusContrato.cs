@@ -1,9 +1,5 @@
 namespace Sabemi.Webhooks.Model.Entities;
 
-/// <summary>
-/// Estado consolidado (mais recente) de um contrato, derivado do processamento
-/// dos eventos de pagamento recebidos.
-/// </summary>
 public class StatusContrato
 {
     public Guid Id { get; set; }

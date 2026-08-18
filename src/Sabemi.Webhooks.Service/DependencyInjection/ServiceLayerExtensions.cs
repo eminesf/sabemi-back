@@ -9,11 +9,11 @@ public static class ServiceLayerExtensions
 {
     public static IServiceCollection AddServiceLayer(this IServiceCollection services, IConfiguration configuration)
     {
-        var sharedSecret = configuration["Webhook:SharedSecret"];
-        if (string.IsNullOrWhiteSpace(sharedSecret))
-            throw new InvalidOperationException("Configuração 'Webhook:SharedSecret' não definida.");
+        var apiKey = configuration["Webhook:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new InvalidOperationException("Configuração 'Webhook:ApiKey' não definida.");
 
-        services.AddSingleton<ISignatureValidator>(new HmacSignatureValidator(sharedSecret));
+        services.AddSingleton<IApiKeyValidator>(new ApiKeyValidator(apiKey));
         services.AddScoped<IWebhookPagamentoService, WebhookPagamentoService>();
         services.AddScoped<IPagamentoProcessingService, PagamentoProcessingService>();
 

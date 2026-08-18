@@ -12,6 +12,9 @@ public interface IEventoBrutoLogRepository
 
     Task AtualizarAsync(EventoBrutoLog evento, CancellationToken ct);
 
+    /// <returns>false se não existir evento com esse Id.</returns>
+    Task<bool> ExcluirAsync(Guid id, CancellationToken ct);
+
     Task<(IReadOnlyList<EventoBrutoLog> Itens, int Total)> ListarAsync(
         string? status,
         string? idContrato,

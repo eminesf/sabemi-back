@@ -22,26 +22,26 @@ serem parte da camada de acesso a dados/infraestrutura). Isso é o que permite
 trocar Postgres por outro banco, ou mockar os repositórios em teste, sem
 tocar na regra de negócio.
 
-## Segurança: Signature (HMAC) vs ApiKey
+## Segurança: ApiKey no header
 
-Implementado: **HMAC-SHA256**, não ApiKey simples.
+Implementado: **ApiKey simples**, no header `X-Api-Key`.
 
-- Banco parceiro e Sabemi compartilham um segredo (`Webhook:SharedSecret`).
-- O banco calcula `HMAC-SHA256(secret, corpo_da_requisição)` e envia o hash no
-  header `X-Signature`.
-- O backend (`HmacSignatureValidator`, em `Service/Services`) lê o **corpo
-  bruto** (raw body, antes de desserializar), recalcula o mesmo HMAC e compara
-  com o header usando `CryptographicOperations.FixedTimeEquals` (comparação em
-  tempo constante — evita timing attack).
-- Diferente de uma ApiKey fixa, a assinatura muda a cada payload: sem o
-  segredo, não dá pra forjar uma requisição válida para um corpo específico.
-- Requisições com assinatura ausente/inválida retornam `401` **e são
+- Banco parceiro e Sabemi combinam uma chave fixa (`Webhook:ApiKey`).
+- O banco envia essa chave, sem alteração nenhuma, no header `X-Api-Key`.
+- O backend (`ApiKeyValidator`, em `Service/Services`) compara o valor
+  recebido com o configurado usando `CryptographicOperations.FixedTimeEquals`
+  (comparação em tempo constante — evita timing attack). Não há hash, cálculo
+  ou assinatura envolvidos: é literalmente a chave combinada, comparada como
+  está.
+- Requisições com API Key ausente/inválida retornam `401` **e são
   registradas mesmo assim** na tabela de log (com `StatusProcessamento =
   ErroValidacao`), para aparecerem no painel com alerta visual — é o
-  comportamento pedido em "Visualização de Erros".
+  comportamento pedido em "Visualização de Erros". A mensagem de erro
+  diferencia os dois casos (`"Header X-Api-Key ausente."` vs. `"API Key
+  inválida."`) pra facilitar o diagnóstico.
 
-Ver `src/Sabemi.Webhooks.Service/Services/HmacSignatureValidator.cs` e o uso
-em `src/Sabemi.Webhooks.Api/Controllers/WebhooksController.cs`.
+Ver `src/Sabemi.Webhooks.Service/Services/ApiKeyValidator.cs` e o uso em
+`src/Sabemi.Webhooks.Api/Controllers/WebhooksController.cs`.
 
 ## Idempotência
 
@@ -121,7 +121,7 @@ O dashboard (React + Vite) vive em repositório separado. Aponte
 2. No serviço da API, configure as variáveis de ambiente:
    - `DATABASE_URL` (injetada automaticamente se o Postgres for do próprio
      projeto Railway; senão, cole a do Supabase).
-   - `Webhook__SharedSecret` (note o `__` duplo — é assim que ASP.NET Core lê
+   - `Webhook__ApiKey` (note o `__` duplo — é assim que ASP.NET Core lê
      seções aninhadas de configuração via variável de ambiente).
    - `Cors__AllowedOrigins__0` = URL pública do frontend.
 

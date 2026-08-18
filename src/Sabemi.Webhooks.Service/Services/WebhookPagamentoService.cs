@@ -40,7 +40,10 @@ public class WebhookPagamentoService : IWebhookPagamentoService
             IdTransacao = payload.IdTransacao,
             IdContrato = payload.IdContrato,
             Valor = payload.Valor,
-            DataPagamento = payload.DataPagamento,
+            // Npgsql só aceita DateTime em Kind=Utc para colunas timestamptz; o JSON
+            // recebido pode trazer offset local (ex.: "-03:00"), que o System.Text.Json
+            // desserializa com Kind=Local.
+            DataPagamento = payload.DataPagamento.ToUniversalTime(),
             StatusRecebido = payload.Status,
             PayloadBruto = rawBody,
             RecebidoEm = DateTime.UtcNow,
@@ -67,12 +70,20 @@ public class WebhookPagamentoService : IWebhookPagamentoService
         return new ReceberWebhookResultado(JaProcessado: false, evento.Id);
     }
 
-    public async Task RegistrarFalhaValidacaoAsync(string rawBody, string motivo, CancellationToken ct)
+    public async Task RegistrarFalhaValidacaoAsync(string rawBody, string motivo, CancellationToken ct, WebhookPagamentoRequest? payload = null)
     {
+        // id_transacao continua sintético mesmo quando o payload é conhecido: o campo real
+        // tem índice único, e se travasse esse valor aqui um reenvio corrigido do banco
+        // parceiro (mesmo id_transacao, dados certos) seria barrado pela constraint e tratado
+        // como "já processado" — nunca chegaria a ser processado de verdade.
         var evento = new EventoBrutoLog
         {
             Id = Guid.NewGuid(),
             IdTransacao = $"INVALIDO-{Guid.NewGuid():N}",
+            IdContrato = payload?.IdContrato,
+            Valor = payload?.Valor ?? 0,
+            DataPagamento = payload?.DataPagamento.ToUniversalTime(),
+            StatusRecebido = payload?.Status,
             PayloadBruto = rawBody,
             RecebidoEm = DateTime.UtcNow,
             StatusProcessamento = StatusProcessamento.ErroValidacao,

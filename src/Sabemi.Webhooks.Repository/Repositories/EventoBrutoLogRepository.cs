@@ -35,6 +35,17 @@ public class EventoBrutoLogRepository(SabemiDbContext dbContext) : IEventoBrutoL
         await dbContext.SaveChangesAsync(ct);
     }
 
+    public async Task<bool> ExcluirAsync(Guid id, CancellationToken ct)
+    {
+        var evento = await dbContext.EventosBrutos.FirstOrDefaultAsync(e => e.Id == id, ct);
+        if (evento is null)
+            return false;
+
+        dbContext.EventosBrutos.Remove(evento);
+        await dbContext.SaveChangesAsync(ct);
+        return true;
+    }
+
     public async Task<(IReadOnlyList<EventoBrutoLog> Itens, int Total)> ListarAsync(
         string? status,
         string? idContrato,
