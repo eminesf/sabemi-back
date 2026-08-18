@@ -15,9 +15,10 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 ENV ASPNETCORE_ENVIRONMENT=Production
-EXPOSE 8080
+EXPOSE 5080
 
 # Railway injeta a variável PORT em runtime (não existe em build time),
 # por isso a resolução do ASPNETCORE_URLS acontece no CMD (shell form),
-# não em ENV.
-CMD ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet Sabemi.Webhooks.Api.dll
+# não em ENV. Fallback 5080 alinhado com a porta configurada manualmente
+# no Networking do Railway, caso $PORT não venha preenchida.
+CMD ASPNETCORE_URLS=http://+:${PORT:-5080} dotnet Sabemi.Webhooks.Api.dll
